@@ -18,7 +18,7 @@ Install gstreamer-1.0 on rapsberry pi board.
 ##Installation and Running##
 
 Download the contents of this repo.
-Run npm install from source root of genie
+Run npm install from source root 
 Run node httpserver.js
 ##Usage## Add videos in mp4,webm,ogg formats to /video folder . Connect to ec2-xxx-xxx-xxx-xxx.compute-1.amazonaws.com:8080 .You will see the webpage with the playlist. Make sure your microphone is connected and is working well.
 
