@@ -13,13 +13,14 @@ to port 9001 on EC2 and streams over TCP using gstreamer pipeline . Server liste
 
 
 ##Prerequisites## A recent version of the Chrome browser supporting "webkitSpeechRecognition" . npm should be installed .
+Install gstreamer-1.0 on rapsberry pi board.
 
 ##Installation and Running##
 
 Download the contents of this repo.
 Run npm install from source root of genie
 Run node httpserver.js
-##Usage## Add videos in mp4,webm,ogg formats to /video folder . Connect to ec2-xxx-xxx-xxx-xxx.compute-1.amazonaws.com:8080 .You will see the webpage withthe playlist. Make sure your microphone is connected and is working well.
+##Usage## Add videos in mp4,webm,ogg formats to /video folder . Connect to ec2-xxx-xxx-xxx-xxx.compute-1.amazonaws.com:8080 .You will see the webpage with the playlist. Make sure your microphone is connected and is working well.
 
 You can control your video playback by saying appropriate commands in your microphone. 
 (1)"zoom" to zoom in and out (2)"play" to start the playback (3)"stop" to stop or pause the playback 
