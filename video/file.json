@@ -1,0 +1,22 @@
+[
+	{
+		"channel": "1",
+		"file": "BournUltimatum.mp4"
+	},
+	{
+		"channel": "8",
+		"file": "video.mp4"
+	},
+        {
+		"channel": "10",
+		"file": "FantasticFour.mp4"
+	},
+        {
+		"channel": "200",
+		"file": "Serinity.mp4"
+	},
+        {
+		"channel": "live",
+		"file": ""
+	}
+]

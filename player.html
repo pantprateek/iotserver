@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+
+<meta charset="utf-8">
+<meta http-equiv = 'Content-Language' content = 'en'/>
+
+<body bgcolor='black' text='white'>
+
+<table>
+     <thead>
+          <tr>
+              <div style="position:relative; bottom:50; right:0; background: yellow;">
+               <th>Channel</th>
+               <th>Name</th>
+               </div>
+           </tr>
+     </thead>
+     <tbody id="tbody">
+     </tbody>
+</table>
+
+<title>Voice command Video Player</title>
+
+<div id="media-player">
+      <table align=center><tr><td>
+	  <video id="video" class="centre"  controls> 
+          <source id="mvsrc"  type="video/mp4"/>
+          </video>
+      </td></tr></table>
+</div>
+<p>
+<div id="results" align="center">
+    <span id="textSpan" class="final"></span>
+</div>
+</p>
+
+</body>
+
+<!-- JavaScript code below -->
+
+<!-- Dependancies -->
+<script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+<script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+<script src="//vjs.zencdn.net/ie8/1.1.1/videojs-ie8.min.js"></script>
+
+
+<script>
+    
+    
+    // Declarations
+    var socket = io().connect('http://ec2-184-73-145-142.compute-1.amazonaws.com:8080');
+    //var socket = io().connect('http://127.0.0.1:8080');
+    var parsingInProgress = false;
+    var lastCommand = "";
+    var command = "";
+    
+    // Not all browsers support webkitSpeechRecognition (only Chrome at the
+    // time of writing).
+    if (window.hasOwnProperty('webkitSpeechRecognition')) {
+       
+
+        var recognition = new webkitSpeechRecognition();
+
+        recognition.continuous = true;
+
+        // Do we want interim results or not (true means yes)
+        recognition.interimResults = true;
+
+        // Triggered on start of Voice Recognition attempt
+        recognition.onstart = function() {
+
+        parsingInProgress = true;
+           
+    }
+     var t; var inspeech=false;
+    recognition.onresult = function(event) {
+            inspeech=true;
+            for (var i = event.resultIndex; i < event.results.length; ++i) {
+
+                // Pick up the command string
+                command = event.results[i][0].transcript ;
+
+                // If the latest command is different from the previous then only send to server
+                
+                if (command != lastCommand){
+                 
+                     socket.emit('command', command);  
+                   
+                }
+
+                lastCommand = command; 
+                // Ensure that the command is stored for comparison against the
+                // the next command.
+                
+            }
+            inspeech=false;
+                  
+  }
+                
+          // Triggered on parsing error
+          recognition.onerror = function(event) {
+
+          // Report error with text code and error image
+          errorReport.innerHTML = "Error Code: " + event.error;
+          recognition.stop(); 
+          parsingInProgress = false;
+        }
+
+         // Triggered on parsing end
+         recognition.onend = function() {
+         //console. log("end event");
+         //parsingInProgress = false;
+          recognition.start();
+
+       }
+
+  }
+ setInterval(resetVoiceRecog, 10000);
+
+function resetVoiceRecog() {
+    if(inspeech==false){ 
+       recognition.stop();
+      }
+}
+initialiseMediaPlayer();
+
+  var v,index=0;
+  var zoom;
+  var sources =[];
+
+  function initialiseMediaPlayer(){
+     recognition.lang = 'en-GB'
+     recognition.start();
+     v = document.getElementsByTagName("video")[0];
+     zoom=false;
+     rate=false;
+     v.width = 1280;
+     v.height =720;
+     //get  playlist from server 
+     $.get("/list", function(data, status) {
+   
+     $.each(data, function (index, item) {
+     var eachrow = "<tr>"
+                 + "<td><font color='white' size='6'>" + item.channel + "</font></td>"
+                 + "<td><font color='white' size='6'>"  + item.file + "</font></td>"
+                 + "</tr>";
+     $('#tbody').append(eachrow);
+    });
+  
+ });
+   
+}
+
+
+ socket.on('ch-change', function(msg) {
+       v.setAttribute("src",msg);
+       v.load();
+       v.play();
+       var playstring =  "<font color='red' size='18'><i>playing: '" + msg + "'. </i></font><br>" ;
+       textSpan.innerHTML=playstring;
+
+     });
+    socket.on('new-message', function(msg) {
+
+         
+          if(msg=="live")
+          {
+             v.setAttribute("src","cam");
+             v.muted=false;
+             v.play();
+             var playstring =  "<font color='red' size='18'><i>playing: '" + msg + "'. </i></font><br>" ;
+             textSpan.innerHTML=playstring;
+              
+          }
+          else if(msg=="play")
+          {
+             v.loop=true;
+             v.muted=false;
+             v.play();
+              
+          }
+          else  if(msg=="stop" || msg=="top"  )
+          { 
+              v.pause();
+          } 
+         
+          else if(msg=="mute" )
+          { 
+             v.muted=true;
+          } 
+
+          else if(msg=="back" || msg=="bak"  ){
+        
+             v.currentTime = v.currentTime -1 ; 
+          }
+
+          else if(msg=="forward" ){
+        
+            v.currentTime = v.currentTime +1 ; 
+          
+          }
+
+          else if(msg== "zoom" )
+          {
+              if(zoom == false){
+             
+                v.width = 1280;
+                v.height = 720;
+                zoom=true;
+              }
+              else {
+                
+                v.width = 340;
+                v.height = 180;
+                zoom=false;   
+              } 
+          }
+  
+    }); 
+
+
+v.setAttribute('controls', '');
+
+var chunks = [];
+
+var constraints = {v: true};
+
+var onSuccess = function(stream) {
+  console.log("stream", stream);
+  var mediaRecorder = new MediaRecorder(stream);
+
+  record.onclick = function() {
+    chunks = [];
+    mediaRecorder.start();
+    console.log("recorder started");
+  }
+
+  stop.onclick = function() {
+    mediaRecorder.stop();
+    console.log("recorder stopped");
+  }
+
+  mediaRecorder.ondataavailable = function(e) {
+    console.log("data available");
+    chunks.push(e.data);
+  }
+
+  mediaRecorder.onstop = function(e) {
+    console.log('onstop fired');
+    var blob = new Blob(chunks, { 'type' : 'video/mp4; codecs=opus' });
+    video.src = window.URL.createObjectURL(blob);
+  };
+
+  mediaRecorder.onwarning = function(e) {
+    console.log('onwarning fired');
+  };
+
+  mediaRecorder.onerror = function(e) {
+    console.log('onerror fired');
+  };
+};
+
+var onError = function(err) {
+  console.log('The following error occured: ' + err);
+}
+
+</script>
